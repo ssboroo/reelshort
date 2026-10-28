@@ -7,6 +7,8 @@ import './style.css';
 import {CatalogImport} from './CatalogImport';
 import {QuickAdd} from './QuickAdd';
 import {LiveSubtitles,SubtitleStudio} from './LiveSubtitles';
+import {HlsVideo,useReelShort,useRsSource} from './RsPlayer';
+import {db,demoFilms,demoEpisodes,rsBookId,type Film,type Episode} from './lib';
 
 function App(){
  const [films,setFilms]=useState<Film[]>(db?[]:demoFilms),[user,setUser]=useState<User|null>(null),[admin,setAdmin]=useState(false),[page,setPage]=useState('Нүүр'),[query,setQuery]=useState(''),[genre,setGenre]=useState('Бүгд'),[selected,setSelected]=useState<Film|null>(null),[episodes,setEpisodes]=useState<Episode[]>([]),[ep,setEp]=useState<Episode|null>(null),[auth,setAuth]=useState(false),[notice,setNotice]=useState(''),[saved,setSaved]=useState<string[]>([]),[history,setHistory]=useState<Record<string,number>>({}),[loading,setLoading]=useState(!!db);
