@@ -90,7 +90,9 @@ def fetch_text(url, content_type):
             raise ValueError('Unexpected redirect host')
         if content_type == 'text/html':
             canonical(response.url)
-        if content_type not in response.headers.get('Content-Type', ''):
+        actual_type = response.headers.get('Content-Type', '').lower()
+        xml_ok = content_type in ('application/xml', 'text/xml') and ('application/xml' in actual_type or 'text/xml' in actual_type)
+        if content_type not in actual_type and not xml_ok:
             raise ValueError('Unexpected content type')
         data = response.read(2_000_001)
         if len(data) > 2_000_000:
