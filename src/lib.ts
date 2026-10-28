@@ -13,3 +13,4 @@ export const demoFilms:Film[] = [
  ['Зүрхний хэмнэл','Романтик','Хөгжим хоёр зүрхийг нэг хэмнэлээр цохилуулна.','photo-1516589178581-6cd7833ae3b2']
 ].map(([title,genre,description,photo],i)=>({id:`demo-${i}`,title,genre,description,poster_url:`https://images.unsplash.com/${photo}?auto=format&fit=crop&w=900&q=85`,featured:i===0,published:true}));
 export const demoEpisodes = (id:string):Episode[] => [{id:`${id}-1`,series_id:id,number:1,title:'Туршилтын видео · Big Buck Bunny',video_url:'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',published:true}];
+export const rsBookId = (url?: string) => url?.match(/([0-9a-f]{24})\/?$/)?.[1] ?? null;
