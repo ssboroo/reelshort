@@ -25,3 +25,4 @@
     }
   ]
 }
+"functions": { "api/stream.mjs": { "maxDuration": 30 } }
