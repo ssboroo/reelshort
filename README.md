@@ -116,3 +116,30 @@ python3 scripts/catalog.py urls.txt --output catalog.json
 `SUPABASE_URL` + `SUPABASE_ANON_KEY` сервер env эсвэл одоогийн `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`-г ашиглана. Service-role key хэрэггүй. `003_metadata_rate_limit.sql` migration-ийг 002-ын дараа ажиллуулна. Endpoint Supabase session + admin RPC шалгаад database-backed глобал 10 секундийн throttle хэрэглэнэ. Зөвхөн ReelShort HTTPS movie URL, redirect хориг, 8 секунд timeout, 1MB HTML limit, robots.txt шалгалттай. Crawl-delay заасан бол API таталтыг зогсоож багц скрипт/гараар оруулахыг санал болгоно.
 
 Live Supabase, Google/SMS, Vercel deployment, бодит ReelShort metadata таталтыг энэ орчинд баталгаажуулаагүй. Offline tests нь auth-ийн эрт татгалзах салаа, URL validation, robots, parser, хэмжээний хязгаар болон 403 дээр зогсохыг шалгана. Frontend TypeScript + production build шалгагдсан; browser QA хийгдээгүй.
+
+## Live Монгол хадмал
+
+**Live хадмал** хуудаснаас local видео сонгох эсвэл киноны тоглуулагч дээр **CC Монгол · Шууд хадмал** асаана. Видео local төхөөрөмжөөс сонгогдвол файл upload хийхгүй; зөвхөн асаасан үеийн дууны хэсгүүд сервер/OpenAI руу явна. Микрофон ашиглахгүй. API түлхүүр frontend рүү очихгүй.
+
+Энэ хувилбар бол **4 секундийн аудио хэсгээр давтан орчуулдаг near-live MVP**. AudioWorklet PCM-ийг 16kHz mono WAV болгож `gpt-4o-mini-transcribe` → `gpt-4.1-mini` Монгол орчуулга → overlay харуулна. Хадмалд 4 секундын цуглуулалт дээр API latency нэмэгдэнэ; тэг хоцролт эсвэл үг бүртэй синхрон хадмал биш. Бүхэл видео урьдчилж боловсруулахгүй, үүссэн хадмалыг database-д хадгалахгүй. Тасалдсан өгүүлбэр, чимээ, дуу хөгжим орчуулгын алдаа үүсгэж болно. Pause/seek/анги солих/унтраахад хуучин хүсэлт болон хадмалыг цуцална. 4 секунд хүрээгүй төгсгөлийн хэсэг илгээгдэхгүй. Хүсэлт удаан байвал хэсгийг алгасаж хоцролтыг хуримтлуулахгүй.
+
+### Идэвхжүүлэх
+
+1. Supabase migration-уудыг дарааллаар ажиллуулна; `004_live_subtitles.sql` шинэ migration шаардлагатай.
+2. Vercel **server environment**-д `OPENAI_API_KEY` тохируулна. `.env.local`-д локал түлхүүр хадгалж болно; репод commit хийхгүй. `VITE_OPENAI_API_KEY` бүү ашигла.
+3. Supabase URL/public anon key, хэрэглэгчийн нэвтрэлт, OpenAI API billing/credit идэвхтэй байх ёстой.
+4. HTTPS дээр ажиллуулна. Local Vite нь API route ажиллуулахгүй; Vercel preview эсвэл Vercel dev хэрэгтэй.
+5. Remote видео CDN `Access-Control-Allow-Origin` зөв өгсөн байх ёстой. HTML video нь `crossOrigin="anonymous"` ашиглана. CORS дэмжихгүй эх сурвалжийн видео/дуу ажиллахгүй. Local файлд энэ хязгаар байхгүй.
+
+Нэвтэрсэн хэрэглэгчид нэг хүсэлт / 3 секунд, UTC өдрийн 300 хүсэлт хүртэл. Энэ нь төсөл даяарх зардлын hard cap биш; production нээлтээс өмнө OpenAI project spending controls тохируулна. Сервер 1–6 секундийн mono PCM WAV болон 192044 bytes хязгаар шалгана. Хүсэлтүүд төлбөртэй, browser abort нь provider дээр эхэлсэн төлбөрийг заавал буцаахгүй.
+
+Хадмал inline тоглуулагч дээр харагдана; native video fullscreen/PiP дотор HTML overlay харагдахгүй. Бодит Android/iOS дээр Web Audio болон AudioWorklet дэмжлэгийг шалгах шаардлагатай.
+
+### Шалгалтын төлөв
+
+- Automated tests: WAV validation, worklet averaging/reset, provider request pipeline, no-speech, upstream errors, auth rejection.
+- Production build амжилттай.
+- Бодит API translation smoke test HTTP 429 `billing_not_active` өгсөн. Түлхүүр үүссэн боловч төлбөр идэвхгүй учраас амжилттай live орчуулга баталгаажаагүй.
+- Supabase migration болон бүтэн authenticated audio flow live project дээр шалгаагүй.
+
+Browser QA: Live хадмал хуудас болон CC товч харагдсан, тохиргоо дутуу үед тодорхой мессеж гарсан. Cloud preview дээр demo remote video ачаалаагүй; бодит видео тоглуулах/хадмалын end-to-end тест бүрэн хийгдээгүй.
