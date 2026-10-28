@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 const url = import.meta.env.VITE_SUPABASE_URL;
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const db = url && key ? createClient(url, key) : null;
-export type Film = {id:string; title:string; genre:string; description:string; poster_url:string; featured:boolean; published:boolean; source_url?:string; created_at?:string};
+export type Film = {id:string; title:string; genre:string; description:string; poster_url:string; featured:boolean; published:boolean; source_url?:string; episode_count?:number|null; first_paid_episode?:number|null; created_at?:string};
 export type Episode = {id:string; series_id:string; number:number; title:string; video_url:string; published:boolean};
 export const demoFilms:Film[] = [
  ['Тавилангийн учрал','Романтик','Нэг учрал бүхнийг өөрчилнө. Хотын завгүй амьдралд хоёр өөр ертөнцийн хүмүүсийн зам огтлолцоно.','photo-1516589178581-6cd7833ae3b2'],
