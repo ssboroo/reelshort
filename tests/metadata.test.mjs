@@ -32,3 +32,21 @@ test('endpoint rejects GET and unauthenticated POST before fetching',async()=>{
  process.env.SUPABASE_URL='https://example.supabase.co';process.env.SUPABASE_ANON_KEY='public-placeholder';
  try{const post=await endpoint.fetch(new Request('https://test/api/metadata',{method:'POST'}));assert.equal(post.status,401);}finally{if(oldURL===undefined)delete process.env.SUPABASE_URL;else process.env.SUPABASE_URL=oldURL;if(oldKey===undefined)delete process.env.SUPABASE_ANON_KEY;else process.env.SUPABASE_ANON_KEY=oldKey;}
 });
+test('Next page metadata tolerates reordered script attributes and strips markup',()=>{
+ const data={props:{pageProps:{data:{book_title:'A &amp; B',special_desc:'<p>A story</p><script>bad()</script><p> about love.</p>',video_url:'private.mp4'}}}};
+ const html=`<script type="application/json" nonce="example" id="__NEXT_DATA__">${JSON.stringify(data).replace(/</g,'\\u003c')}</script>`;
+ assert.deepEqual(parseMetadata(html),{title:'A & B',description:'A story about love.'});
+});
+test('malformed Next JSON and unexpected value types fall back to HTML',()=>{
+ for(const json of ['{bad','null',JSON.stringify({props:{pageProps:{data:{book_title:{bad:true},special_desc:42}}}})]){
+  assert.deepEqual(parseMetadata(`<script id="__NEXT_DATA__">${json}</script><meta property="og:title" content="Fallback"><meta name="description" content="Description">`),{title:'Fallback',description:'Description'});
+ }
+});
+test('challenge page is rejected even with embedded book metadata',()=>{
+ assert.throws(()=>parseMetadata('<title>Access Denied</title><script id="__NEXT_DATA__">{"props":{"pageProps":{"data":{"book_title":"Movie"}}}}</script>'));
+});
+test('metadata bounds and empty pages',()=>{
+ assert.throws(()=>parseMetadata('<html></html>'));
+ const row=parseMetadata(`<meta property="og:title" content="${'a'.repeat(250)}"><meta name="description" content="${'b'.repeat(6000)}">`);
+ assert.equal(row.title.length,200);assert.equal(row.description.length,5000);
+});
