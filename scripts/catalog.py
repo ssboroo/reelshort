@@ -78,3 +78,25 @@ if __name__ == '__main__':
         print(f'Collected {len(rows)} records. Review in Admin before importing.')
     except Exception as e:
         parser.exit(1, f'Collection stopped: {e}\nNo access bypass attempted.\n')
+
+# 1) UA солих
+AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
+
+# 2) fetch_text-д Accept-Language нэмэх
+req = Request(url, headers={'User-Agent': AGENT, 'Accept': content_type,
+                            'Accept-Language': 'en-US,en;q=0.9'})
+
+# 3) extract()-д __NEXT_DATA__ уншиж, ангийн тоо/нэрийг нэмэх
+import re
+def extract(html, url):
+    row = _old_extract(html, url)          # одоогийн og:title логик хэвээр
+    m = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html, re.S)
+    if m:
+        d = json.loads(m.group(1))['props']['pageProps']['data']
+        row['book_id'] = d['book_id']
+        row['chapter_count'] = d.get('total')
+        row['paid_start'] = d.get('paid_start')
+        row['cover_url'] = d.get('book_pic')
+        row['chapters'] = [{'n': c['serial_number'], 'id': c['chapter_id']}
+                           for c in d.get('online_base', [])]
+    return row
