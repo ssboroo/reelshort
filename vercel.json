@@ -23,6 +23,10 @@
         }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/stream.mjs": {
+      "maxDuration": 30
+    }
+  }
 }
-"functions": { "api/stream.mjs": { "maxDuration": 30 } }
