@@ -41,3 +41,18 @@ function Auth({close}:{close:()=>void}){const [mode,setMode]=useState('email'),[
 function Admin({films,reload,report}:{films:Film[];reload:()=>void;report:(e:unknown)=>void}){const [busy,setBusy]=useState(false);async function submit(event:React.FormEvent<HTMLFormElement>,table:string){event.preventDefault();if(!db)return;const form=event.currentTarget;const data=Object.fromEntries(new FormData(form));setBusy(true);const payload:Record<string,unknown>=table==='episodes'?{...data,number:Number(data.number),published:true}:{...data,published:true,featured:false};const {error}=await db.from(table).insert(payload);setBusy(false);if(error)report(error);else{form.reset();reload();report('Амжилттай нийтэллээ.')}}return <div className="admin"><form onSubmit={e=>void submit(e,'series')}><h3>Цуврал нэмэх</h3><label>Нэр<input name="title" required/></label><label>Төрөл<select name="genre">{['Романтик','Драм','Триллер','Инээдэм','Адал явдал'].map(x=><option key={x}>{x}</option>)}</select></label><label>Тайлбар<textarea name="description" required/></label><label>Постерийн HTTPS холбоос<input name="poster_url" type="url" pattern="https://.*" required/></label><button disabled={busy} className="primary">Цуврал нийтлэх</button></form><form onSubmit={e=>void submit(e,'episodes')}><h3>Анги нэмэх</h3><label>Цуврал<select name="series_id" required>{films.map(f=><option value={f.id} key={f.id}>{f.title}</option>)}</select></label><label>Ангийн дугаар<input type="number" name="number" min="1" required/></label><label>Ангийн нэр<input name="title" required/></label><label>Видео HTTPS холбоос (MP4)<input name="video_url" type="url" pattern="https://.*" required/></label><p>Зөвхөн түгээх эрхтэй видеоны холбоос оруулна уу.</p><button disabled={busy||!films.length} className="primary">Анги нийтлэх</button></form></div>}
 createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);
 if('serviceWorker' in navigator)window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{})});
+const rsBook=rsBookId(selected?.source_url);
+const rs=useReelShort(rsBook);
+useEffect(()=>{
+ if(!selected||!rsBook||episodeLoading||episodes.length||!rs.chapters.length) return;
+ const list=rs.chapters.map(c=>({id:`rs:${rsBook}:${c.n}`,series_id:selected.id,
+   number:c.n,title:c.title,video_url:'',published:true}));
+ setEpisodes(list); setEp(list[0]);           // эхний ангийг шууд тоглуулна
+},[rs.chapters,episodes.length,episodeLoading,rsBook,selected?.id]);
+if(rs.error) report(rs.error);
+
+const epN=ep?.id.startsWith('rs:')?Number(ep.id.split(':')[2]):null;
+const rsSrc=useRsSource(rsBook,epN);
+const playSrc=epN!==null
+  ? (rsSrc?.['1080P']||rsSrc?.['720P']||Object.values(rsSrc||{})[0]||'')
+  : (ep?.video_url||'');
