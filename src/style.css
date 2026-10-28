@@ -93,3 +93,41 @@ footer{margin:0 clamp(18px,5vw,76px);border-color:#ffffff12;padding:28px 0 38px}
 .admin-dashboard .admin form{padding:16px;border:1px solid #ffffff10;border-radius:10px;background:#ffffff03}
 @media(max-width:950px){.admin-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-workspace-grid{grid-template-columns:1fr}.admin-workspace-side{position:static}.admin-tool-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:700px){.admin-entry{padding:9px}.admin-entry svg{display:none}.admin-welcome{align-items:flex-start;flex-direction:column;padding:22px;border-radius:15px}.admin-welcome h2{font-size:27px!important}.admin-secure{font-size:10px}.admin-metrics{gap:9px;margin-bottom:28px}.admin-metric{padding:15px}.admin-metric strong{font-size:26px;margin-top:12px}.admin-metric small{font-size:9px}.admin-tool-grid{grid-template-columns:1fr;gap:10px;margin-bottom:28px}.admin-tool-card{padding:18px}.admin-tool-card p{min-height:0}.admin-section-title{align-items:flex-start;flex-direction:column}.admin-section-title h3{font-size:20px}.admin-refresh{width:100%}.admin-dashboard .quick-fields{grid-template-columns:1fr;gap:4px}.admin-workspace-side{padding:19px}.admin-panel-heading h3{font-size:18px}}
+
+
+/* Catalog readability and consistent sizing */
+main{max-width:1800px;padding-left:clamp(20px,3.5vw,64px);padding-right:clamp(20px,3.5vw,64px)}
+.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:30px 24px}
+.card-caption button:first-child{font-size:14px;line-height:1.55}
+.card p{font-size:12px;line-height:1.65}
+.poster{aspect-ratio:2/2.9;border-radius:12px}
+.poster-title{font-size:clamp(22px,1.8vw,30px);line-height:1.18}
+.poster-bottom{font-size:9px}
+.badge{font-size:10px;padding:5px 8px}
+.section-head h2{font-size:clamp(25px,2.2vw,34px)}
+.eyebrow{font-size:11px}
+.discovery{padding:26px 28px}
+.discovery strong{font-size:17px}
+.discovery p{font-size:14px;line-height:1.6}
+.genres button{font-size:13px;padding:11px 21px}
+.empty{min-height:300px;padding:78px 24px}
+.empty h3{font-size:22px;margin:18px 0 10px}
+.empty p{font-size:14px;line-height:1.8}
+.demo{font-size:11px;padding:9px 12px;letter-spacing:.5px}
+@media(min-width:1500px){.grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:32px 26px}}
+@media(max-width:1050px){.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 18px}}
+@media(max-width:700px){
+ main{padding-left:16px;padding-right:16px}
+ .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 14px}
+ .card-caption button:first-child{font-size:13px}
+ .card p{font-size:11px}
+ .poster-title{font-size:clamp(20px,6vw,27px)}
+ .discovery{padding:18px;align-items:flex-start}
+ .discovery strong{font-size:14px}
+ .discovery p{font-size:11px}
+ .genres button{font-size:12px;padding:10px 16px}
+ .empty{min-height:250px;padding:54px 12px}
+ .empty h3{font-size:19px}
+ .empty p{font-size:12px}
+ .demo{font-size:9px;line-height:1.6}
+}
