@@ -79,24 +79,43 @@ if __name__ == '__main__':
     except Exception as e:
         parser.exit(1, f'Collection stopped: {e}\nNo access bypass attempted.\n')
 
-# 1) UA солих
+# Browser-like headers for ordinary public metadata requests.
 AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
 
-# 2) fetch_text-д Accept-Language нэмэх
-req = Request(url, headers={'User-Agent': AGENT, 'Accept': content_type,
-                            'Accept-Language': 'en-US,en;q=0.9'})
-
-# 3) extract()-д __NEXT_DATA__ уншиж, ангийн тоо/нэрийг нэмэх
+# Include optional publicly embedded catalog metadata when the page exposes it.
 import re
+_old_extract = extract
 def extract(html, url):
-    row = _old_extract(html, url)          # одоогийн og:title логик хэвээр
+    row = _old_extract(html, url)
     m = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html, re.S)
     if m:
-        d = json.loads(m.group(1))['props']['pageProps']['data']
-        row['book_id'] = d['book_id']
-        row['chapter_count'] = d.get('total')
-        row['paid_start'] = d.get('paid_start')
-        row['cover_url'] = d.get('book_pic')
-        row['chapters'] = [{'n': c['serial_number'], 'id': c['chapter_id']}
-                           for c in d.get('online_base', [])]
+        try:
+            d = json.loads(m.group(1)).get('props', {}).get('pageProps', {}).get('data', {})
+            if isinstance(d, dict):
+                if d.get('book_id') is not None: row['book_id'] = d['book_id']
+                if d.get('total') is not None: row['chapter_count'] = d['total']
+                if d.get('paid_start') is not None: row['paid_start'] = d['paid_start']
+                if d.get('book_pic'): row['cover_url'] = d['book_pic']
+                chapters = d.get('online_base')
+                if isinstance(chapters, list):
+                    row['chapters'] = [{'n': ch.get('serial_number'), 'id': ch.get('chapter_id')}
+                                       for ch in chapters if isinstance(ch, dict)]
+        except (json.JSONDecodeError, TypeError, AttributeError):
+            # Optional embedded state must never break basic public metadata extraction.
+            pass
     return row
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('urls', help='UTF-8 file with one ReelShort /movie/ URL per line')
+    parser.add_argument('--output', default='catalog.json')
+    args = parser.parse_args()
+    try:
+        with open(args.urls, encoding='utf-8') as f:
+            urls = [x.strip() for x in f if x.strip() and not x.startswith('#')]
+        rows = collect(urls)
+        with open(args.output, 'x', encoding='utf-8') as f:
+            json.dump(rows, f, ensure_ascii=False, indent=2)
+        print(f'Collected {len(rows)} records. Review in Admin before importing.')
+    except Exception as e:
+        parser.exit(1, f'Collection stopped: {e}\\nNo access bypass attempted.\\n')
