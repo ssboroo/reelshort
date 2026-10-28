@@ -99,3 +99,20 @@ python3 scripts/catalog.py urls.txt --output catalog.json
 7. Supabase Table Editor-оос ноорогийг хянаж, өөрийн эрхтэй постер, ангиудыг нэмсний дараа `published=true` болгоно. Импортын placeholder нь reelshort.mn/icon.svg тул домэйн холбохоос өмнө өөрийн постер URL-аар солино.
 
 `npm test` нь parser, URL validation, robots хориг, давхардал, crawl delay, алдаа дээр зогсох урсгалыг offline fixtures-ээр шалгана. Database migration/RLS-г live Supabase дээр шалгаагүй.
+
+## Нэг холбоосоор нэмэх + кино нээж олох
+
+Админ хэсгийн эхэнд **Нэг холбоос. Шинэ кино.** форм нэмэгдсэн. ReelShort movie URL тавиад **Мэдээллийг авах** дарна. Public HTML metadata амжилттай ирвэл нэр/тайлбар бөглөгдөнө. 403, robots хориг, CORS биш серверийн алдаа, endpoint идэвхгүй үед нэр/тайлбарыг гараар оруулж хадгалж болно. Постер заавал биш. **Хянасан, каталогт шууд нийтлэх** сонголттой; сонгоогүй бол ноорог. Доорх төлөвийн жагсаалтаас нийтлэх/нуух боломжтой. Ноорог public каталог болон админы үзэгчийн нүүрт ч харагдахгүй.
+
+- Видео анги байхгүй, source_url байгаа бол **ReelShort дээр үзэх** товч шинэ цонхоор эх сайтыг нээнэ. Энэ нь embed/free unlock биш; эх сайтын бүртгэл, төлбөр хэвээр.
+- Видео анги нэмэгдсэн бол дотоод тоглуулагч ажиллана.
+- Хайлт нэр + тайлбар + төрлөөр; шинэ/нэр/хадгалсан киноны төрлөөр эрэмбэлнэ.
+- Ижил төрлийн кино санал болгоно. Энэ нь энгийн төрлийн тохирол, AI API ашигладаггүй.
+
+### Metadata endpoint
+
+`api/metadata.mjs` нь Vercel Node function (Web Request/Response handler). `npm run dev` нь Vite UI л ажиллуулдаг; endpoint-ийг туршихад Vercel preview эсвэл Vercel dev хэрэгтэй. Энгийн static hosting дээр endpoint ажиллахгүй; гараар нэмэх боломж хэвээр.
+
+`SUPABASE_URL` + `SUPABASE_ANON_KEY` сервер env эсвэл одоогийн `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`-г ашиглана. Service-role key хэрэггүй. `003_metadata_rate_limit.sql` migration-ийг 002-ын дараа ажиллуулна. Endpoint Supabase session + admin RPC шалгаад database-backed глобал 10 секундийн throttle хэрэглэнэ. Зөвхөн ReelShort HTTPS movie URL, redirect хориг, 8 секунд timeout, 1MB HTML limit, robots.txt шалгалттай. Crawl-delay заасан бол API таталтыг зогсоож багц скрипт/гараар оруулахыг санал болгоно.
+
+Live Supabase, Google/SMS, Vercel deployment, бодит ReelShort metadata таталтыг энэ орчинд баталгаажуулаагүй. Offline tests нь auth-ийн эрт татгалзах салаа, URL validation, robots, parser, хэмжээний хязгаар болон 403 дээр зогсохыг шалгана. Frontend TypeScript + production build шалгагдсан; browser QA хийгдээгүй.

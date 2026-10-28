@@ -7,13 +7,15 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "python3 -m unittest discover -s tests -p \"test_*.py\""
+    "test": "python3 -m unittest discover -s tests -p \"test_*.py\" && node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
+    "cheerio": "^1.2.0",
+    "lucide-react": "^0.468.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "lucide-react": "^0.468.0"
+    "robots-parser": "^3.0.1"
   },
   "devDependencies": {
     "@types/react": "^19.1.13",
