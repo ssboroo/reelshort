@@ -28,7 +28,7 @@ npm run dev
 
 ## Supabase тохируулах
 
-1. Supabase project үүсгээд SQL Editor дээр `supabase/schema.sql` ажиллуулна (нэг удаа).
+1. Supabase project үүсгээд SQL Editor дээр `supabase/schema.sql` ажиллуулна, дараа нь `supabase/migrations/002_catalog_import.sql`, `003_metadata_rate_limit.sql`, `004_live_subtitles.sql`, `005_catalog_metadata.sql` миграцуудыг дарааллаар ажиллуулна.
 2. Authentication → URL Configuration: Site URL `https://reelshort.mn`; redirect allowlist-д `https://reelshort.mn`, `http://localhost:5173` болон preview domain-оо нэмнэ.
 3. Email provider идэвхжүүлж production SMTP тохируулна. Имэйл холбоосоор бүртгүүлж, нэвтэрнэ.
 4. Google provider: Google Cloud OAuth client ID/secret-ийг Supabase dashboard-д оруулна. Google-ийн callback нь Supabase dashboard-д үзүүлсэн `https://PROJECT.supabase.co/auth/v1/callback` байна. Secret-ийг репод бүү хадгал.
@@ -81,24 +81,24 @@ Demo video: Big Buck Bunny © Blender Foundation, CC BY 3.0, https://www.bigbuck
 
 ## ReelShort metadata scrape → админ хяналт → ноорог импорт
 
-Энэ нэмэлт нь **нэр, тайлбар, эх киноны холбоос** цуглуулна. Видео, постер файл, төлбөртэй анги татахгүй. ReelShort-ийн бодит хуудсыг энэ хөгжүүлэлтийн орчноос шалгахад HTTP 403 ирсэн; live extraction баталгаажаагүй. HTML parser нь Open Graph / title / description metadata дэмждэг; сайт зөвхөн JavaScript-ээр мэдээлэл гаргадаг бол parser шинэчлэх шаардлагатай.
+Энэ нэмэлт нь **нэр, тайлбар, постерын HTTPS холбоос, нийт ангийн тоо, төлбөртэй анги эхлэх дугаар, эх киноны холбоос** зэрэг нийтэд ил байгаа мета өгөгдлийг цуглуулна. Видео файл болон төлбөртэй ангийн эх сурвалж татахгүй. Постерын зургийг хуулж хадгалахгүй; зөвхөн нийтэд нээлттэй зургийн холбоос хадгална. ReelShort-ийн бодит хуудсыг энэ хөгжүүлэлтийн орчноос шалгахад HTTP 403 ирсэн; live extraction баталгаажаагүй. HTML parser нь Open Graph / title / description metadata дэмждэг; сайт зөвхөн JavaScript-ээр мэдээлэл гаргадаг бол parser шинэчлэх шаардлагатай.
 
 1. Одоо байгаа Supabase project дээр `supabase/migrations/002_catalog_import.sql` ажиллуулна. Шинэ суулгалтад эхлээд `schema.sql`, дараа нь энэ migration.
-2. `urls.txt` дотор нэг мөрөнд нэг `https://www.reelshort.com/movie/...` киноны хуудасны холбоос тавина (дээд тал нь 50).
+2. Эхлээд `python3 scripts/catalog.py --discover --limit 1000 --output catalog.json` гэж ажиллуулж, robots.txt-д зарласан sitemap-уудаас нийтэд нээлттэй киноны холбоос илрүүлэхийг оролдоно. Sitemap discovery боломжгүй бол `urls.txt` дотор нэг мөрөнд нэг `https://www.reelshort.com/movie/...` холбоос тавьж гараар ажиллуулна.
 3. Python 3-аар ажиллуулна:
 
 ```sh
 python3 scripts/catalog.py urls.txt --output catalog.json
 ```
 
-Скрипт эхлээд robots.txt шалгаж, хүсэлтүүдийн хооронд дор хаяж 2 секунд хүлээнэ. 403, 429, robots хориг, буруу HTML эсвэл сүлжээний алдаа гарвал зогсоно; proxy/cookie/login ашиглаж тойрохгүй. Бүх хуудас амжилттай болсны дараа шинэ JSON файл бичнэ. Өмнөх файлыг дарж бичихгүй. URL-уудаас гадна автомат sitemap crawler ороогүй.
+Скрипт robots.txt болон зөвшөөрөгдсөн sitemap-уудыг шалгаж, киноны хүсэлтүүдийн хооронд дор хаяж 2 секунд хүлээнэ. 403, 429, robots хориг, буруу HTML эсвэл сүлжээний алдаа гарвал зогсоно; proxy/cookie/login ашиглаж тойрохгүй. Бүх хуудас амжилттай болсны дараа шинэ JSON файл бичнэ. Өмнөх файлыг дарж бичихгүй. `--discover` нь зөвхөн robots.txt-д зарласан sitemap ашиглана; тухайн сайт sitemap нээгээгүй эсвэл хүсэлт хориглосон бол автомат scrape амжилтгүй болно.
 
 4. Веб дээр админ бүртгэлээр орно → footer **Админ** → **ReelShort каталог импортлох** → JSON сонгоно.
 5. Нэр, тайлбарыг монголоор засаж, төрлийг сонгож, импортлох мөрүүдийг тэмдэглэнэ. **Нооргоор импортлох** дарна.
 6. Давхардсан source_url-ийг алгасна, өмнөх киноны утгыг дарж өөрчлөхгүй. Импорт нэг database transaction; алдаа гарвал багц бүхэлдээ буцна. Шинэ бичлэгүүд `published=false` бөгөөд public хэрэглэгчид харагдахгүй.
 7. Supabase Table Editor-оос ноорогийг хянаж, өөрийн эрхтэй постер, ангиудыг нэмсний дараа `published=true` болгоно. Импортын placeholder нь reelshort.mn/icon.svg тул домэйн холбохоос өмнө өөрийн постер URL-аар солино.
 
-`npm test` нь parser, URL validation, robots хориг, давхардал, crawl delay, алдаа дээр зогсох урсгалыг offline fixtures-ээр шалгана. Database migration/RLS-г live Supabase дээр шалгаагүй.
+`npm test` нь parser, sitemap discovery, URL validation, robots хориг, давхардал, crawl delay, алдаа дээр зогсох урсгалыг offline fixtures-ээр шалгана. Database migration/RLS-г live Supabase дээр шалгаагүй.
 
 ## Нэг холбоосоор нэмэх + кино нээж олох
 
