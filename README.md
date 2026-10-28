@@ -78,3 +78,24 @@ npm run preview
 CI нь TypeScript болон production build шалгана. Supabase project/SMS credential-гүй орчинд live auth болон SQL migration execution баталгаажаагүй.
 
 Demo video: Big Buck Bunny © Blender Foundation, CC BY 3.0, https://www.bigbuckbunny.org/ . Demo imagery: Unsplash remote images. Бодит кино болон постеруудыг эрхтэй эх үүсвэрээр солино.
+
+## ReelShort metadata scrape → админ хяналт → ноорог импорт
+
+Энэ нэмэлт нь **нэр, тайлбар, эх киноны холбоос** цуглуулна. Видео, постер файл, төлбөртэй анги татахгүй. ReelShort-ийн бодит хуудсыг энэ хөгжүүлэлтийн орчноос шалгахад HTTP 403 ирсэн; live extraction баталгаажаагүй. HTML parser нь Open Graph / title / description metadata дэмждэг; сайт зөвхөн JavaScript-ээр мэдээлэл гаргадаг бол parser шинэчлэх шаардлагатай.
+
+1. Одоо байгаа Supabase project дээр `supabase/migrations/002_catalog_import.sql` ажиллуулна. Шинэ суулгалтад эхлээд `schema.sql`, дараа нь энэ migration.
+2. `urls.txt` дотор нэг мөрөнд нэг `https://www.reelshort.com/movie/...` киноны хуудасны холбоос тавина (дээд тал нь 50).
+3. Python 3-аар ажиллуулна:
+
+```sh
+python3 scripts/catalog.py urls.txt --output catalog.json
+```
+
+Скрипт эхлээд robots.txt шалгаж, хүсэлтүүдийн хооронд дор хаяж 2 секунд хүлээнэ. 403, 429, robots хориг, буруу HTML эсвэл сүлжээний алдаа гарвал зогсоно; proxy/cookie/login ашиглаж тойрохгүй. Бүх хуудас амжилттай болсны дараа шинэ JSON файл бичнэ. Өмнөх файлыг дарж бичихгүй. URL-уудаас гадна автомат sitemap crawler ороогүй.
+
+4. Веб дээр админ бүртгэлээр орно → footer **Админ** → **ReelShort каталог импортлох** → JSON сонгоно.
+5. Нэр, тайлбарыг монголоор засаж, төрлийг сонгож, импортлох мөрүүдийг тэмдэглэнэ. **Нооргоор импортлох** дарна.
+6. Давхардсан source_url-ийг алгасна, өмнөх киноны утгыг дарж өөрчлөхгүй. Импорт нэг database transaction; алдаа гарвал багц бүхэлдээ буцна. Шинэ бичлэгүүд `published=false` бөгөөд public хэрэглэгчид харагдахгүй.
+7. Supabase Table Editor-оос ноорогийг хянаж, өөрийн эрхтэй постер, ангиудыг нэмсний дараа `published=true` болгоно. Импортын placeholder нь reelshort.mn/icon.svg тул домэйн холбохоос өмнө өөрийн постер URL-аар солино.
+
+`npm test` нь parser, URL validation, robots хориг, давхардал, crawl delay, алдаа дээр зогсох урсгалыг offline fixtures-ээр шалгана. Database migration/RLS-г live Supabase дээр шалгаагүй.
